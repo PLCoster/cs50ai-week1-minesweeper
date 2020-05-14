@@ -108,7 +108,7 @@ class Sentence():
 
         # If count of mines is equal to number of cells (and > 0), all cells are mines:
         if len(self.cells) == self.count and self.count != 0:
-          print('Mines Identified! - ', self.cells)
+          print('Mine Identified! - ', self.cells)
           return self.cells
         else:
           return set()
@@ -283,6 +283,7 @@ class MinesweeperAI():
 
                         # Add to knowledge if not already in KB:
                         if new_sentence not in self.knowledge:
+                            knowledge_changed = True
                             print('New Inferred Knowledge: ', new_sentence, 'from', sentence_1, ' and ', sentence_2)
                             self.knowledge.append(new_sentence)
 
@@ -290,6 +291,7 @@ class MinesweeperAI():
         print('Current AI KB length: ', len(self.knowledge))
         print('Known Mines: ', self.mines)
         print('Safe Moves Remaining: ', self.safes - self.moves_made)
+        print('====================================================')
 
 
     def make_safe_move(self):
@@ -305,7 +307,7 @@ class MinesweeperAI():
         # Get set of safe cells that are not moves already done:
         safe_moves = self.safes - self.moves_made
         if safe_moves:
-          print('Making a Safe Move! Safe moves available: ', safe_moves)
+          print('Making a Safe Move! Safe moves available: ', len(safe_moves))
           return random.choice(list(safe_moves))
 
         # Otherwise no guaranteed safe moves can be made
@@ -319,16 +321,52 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        moves = []
+        # dictionary to hold possible moves and their mine probability:
+        moves = {}
+        MINES = 8
+
+        # Calculate basic probability of any cell being a mine with no KB:
+        num_mines_left = MINES - len(self.mines)
+        spaces_left = (self.height * self.width) - (len(self.moves_made) + len(self.mines))
+
+        # If no spaces are left that are acceptable moves, return no move possible
+        if spaces_left == 0:
+          return None
+
+        basic_prob = num_mines_left / spaces_left
 
         # Get list of all possible moves that are not mines
         for i in range(0, self.height):
-          for j in range(0, self.width):
-            if (i, j) not in self.moves_made and (i, j) not in self.mines:
-              moves.append((i,j))
+            for j in range(0, self.width):
+              if (i, j) not in self.moves_made and (i, j) not in self.mines:
+                moves[(i, j)] = basic_prob
 
-        if moves:
-          return random.choice(moves)
+        # If no moves have been made (nothing in KB) then any is a good option:
+        if moves and not self.knowledge:
+            move = random.choice(list(moves.keys()))
+            print('AI Selecting Random Move With Basic Probability: ', move)
+            return move
 
-        # Otherwise no move can be made that is not a mine:
-        return None
+        # Otherwise can potentially improve random choice using KB:
+        elif moves:
+            for sentence in self.knowledge:
+                num_cells = len(sentence.cells)
+                count = sentence.count
+                mine_prob = count / num_cells
+                # If mine probabilty of each cell is worse than listed, update it:
+                for cell in sentence.cells:
+                    if moves[cell] < mine_prob:
+                        moves[cell] = mine_prob
+
+            # Get and return random move with lowest mine probability:
+            move_list = [[x, moves[x]] for x in moves]
+            move_list.sort(key=lambda x: x[1])
+            best_prob = move_list[0][1]
+
+            best_moves = [x for x in move_list if x[1] == best_prob]
+            move = random.choice(best_moves)[0]
+            print('AI Selecting Random Move with lowest mine probability using KB: ', move)
+
+            # Return a random choice from the best moves list
+            return move
+
