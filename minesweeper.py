@@ -230,60 +230,67 @@ class MinesweeperAI():
                     new_sentence_cells.add((i, j))
 
         # Add the new sentence to the AI's Knowledge Base:
-        print('NEW SENTENCE ADDED TO KNOWLEDGE: ', cell,  new_sentence_cells, count)
+        print(f'Move on cell: {cell} has added sentence to knowledge {new_sentence_cells} = {count}' )
         self.knowledge.append(Sentence(new_sentence_cells, count))
 
-        safes = set()
-        mines = set()
+        # Iteratively mark guaranteed mines and safes, and infer new knowledge:
+        knowledge_changed = True
 
-        # Get set of safe spaces and mines from KB
-        for sentence in self.knowledge:
-            safes = safes.union(sentence.known_safes())
-            mines = mines.union(sentence.known_mines())
+        while knowledge_changed:
+            knowledge_changed = False
 
-        # Mark any safe spaces or mines:
-        if safes:
-            for safe in safes:
-                self.mark_safe(safe)
-        if mines:
-            for mine in mines:
-                self.mark_mine(mine)
+            safes = set()
+            mines = set()
 
-        # Remove any empty sentences from knowledge base:
-        empty = Sentence(set(), 0)
+            # Get set of safe spaces and mines from KB
+            for sentence in self.knowledge:
+                safes = safes.union(sentence.known_safes())
+                mines = mines.union(sentence.known_mines())
 
-        self.knowledge[:] = [x for x in self.knowledge if x != empty]
+            # Mark any safe spaces or mines:
+            if safes:
+                knowledge_changed = True
+                for safe in safes:
+                    self.mark_safe(safe)
+            if mines:
+                knowledge_changed = True
+                for mine in mines:
+                    self.mark_mine(mine)
 
-        # Try to infer new sentences from the current ones:
-        for sentence_1 in self.knowledge:
-            for sentence_2 in self.knowledge:
+            # Remove any empty sentences from knowledge base:
+            empty = Sentence(set(), 0)
 
-                # Ignore when sentences are identical
-                if sentence_1.cells == sentence_2.cells:
-                    continue
+            self.knowledge[:] = [x for x in self.knowledge if x != empty]
 
-                if sentence_1.cells == set() and sentence_1.count > 0:
-                    print('Error - sentence with no cells and count created')
-                    raise NotImplementedError
+            # Try to infer new sentences from the current ones:
+            for sentence_1 in self.knowledge:
+                for sentence_2 in self.knowledge:
 
-                # Create a new sentence if 1 is subset of 2, and not in KB:
-                if sentence_1.cells.issubset(sentence_2.cells):
-                    print('Inferring new knowledge from: ', sentence_1, sentence_2)
-                    new_sentence_cells = sentence_2.cells - sentence_1.cells
-                    new_sentence_count = sentence_2.count - sentence_1.count
+                    # Ignore when sentences are identical
+                    if sentence_1.cells == sentence_2.cells:
+                        continue
 
-                    new_sentence = Sentence(new_sentence_cells, new_sentence_count)
+                    if sentence_1.cells == set() and sentence_1.count > 0:
+                        print('Error - sentence with no cells and count created')
+                        raise ValueError
 
-                    # Add to knowledge if not already in KB:
-                    if new_sentence not in self.knowledge:
-                        print('New Inferred Knowledge: ', new_sentence)
-                        self.knowledge.append(new_sentence)
+                    # Create a new sentence if 1 is subset of 2, and not in KB:
+                    if sentence_1.cells.issubset(sentence_2.cells):
+                        new_sentence_cells = sentence_2.cells - sentence_1.cells
+                        new_sentence_count = sentence_2.count - sentence_1.count
 
+                        new_sentence = Sentence(new_sentence_cells, new_sentence_count)
 
-        # Might need to iteratively call this until no changes made?
+                        # Add to knowledge if not already in KB:
+                        if new_sentence not in self.knowledge:
+                            print('New Inferred Knowledge: ', new_sentence, 'from', sentence_1, ' and ', sentence_2)
+                            self.knowledge.append(new_sentence)
+
+        # Print out AI current knowledge to terminal:
         print('Current AI KB length: ', len(self.knowledge))
         print('Known Mines: ', self.mines)
         print('Safe Moves Remaining: ', self.safes - self.moves_made)
+
 
     def make_safe_move(self):
         """
