@@ -108,10 +108,10 @@ class Sentence():
 
         # If count of mines is equal to number of cells (and > 0), all cells are mines:
         if len(self.cells) == self.count and self.count != 0:
-          print('Mine Identified! - ', self.cells)
-          return self.cells
+            print('Mine Identified! - ', self.cells)
+            return self.cells
         else:
-          return set()
+            return set()
 
     def known_safes(self):
         """
@@ -120,9 +120,9 @@ class Sentence():
 
         # If count of mines is zero then all cells in the sentence are safe:
         if self.count == 0:
-          return self.cells
+            return self.cells
         else:
-          return set()
+            return set()
 
     def mark_mine(self, cell):
         """
@@ -132,8 +132,8 @@ class Sentence():
 
         # If cell is in the sentence, remove it and decrement count by one
         if cell in self.cells:
-          self.cells.remove(cell)
-          self.count -= 1
+            self.cells.remove(cell)
+            self.count -= 1
 
     def mark_safe(self, cell):
         """
@@ -143,7 +143,7 @@ class Sentence():
 
         # If cell is in the sentence, remove it, but do not decrement count
         if cell in self.cells:
-          self.cells.remove(cell)
+            self.cells.remove(cell)
 
 
 class MinesweeperAI():
@@ -293,7 +293,6 @@ class MinesweeperAI():
         print('Safe Moves Remaining: ', self.safes - self.moves_made)
         print('====================================================')
 
-
     def make_safe_move(self):
         """
         Returns a safe cell to choose on the Minesweeper board.
@@ -307,12 +306,11 @@ class MinesweeperAI():
         # Get set of safe cells that are not moves already done:
         safe_moves = self.safes - self.moves_made
         if safe_moves:
-          print('Making a Safe Move! Safe moves available: ', len(safe_moves))
-          return random.choice(list(safe_moves))
+            print('Making a Safe Move! Safe moves available: ', len(safe_moves))
+            return random.choice(list(safe_moves))
 
         # Otherwise no guaranteed safe moves can be made
         return None
-
 
     def make_random_move(self):
         """
@@ -331,15 +329,15 @@ class MinesweeperAI():
 
         # If no spaces are left that are acceptable moves, return no move possible
         if spaces_left == 0:
-          return None
+            return None
 
         basic_prob = num_mines_left / spaces_left
 
         # Get list of all possible moves that are not mines
         for i in range(0, self.height):
             for j in range(0, self.width):
-              if (i, j) not in self.moves_made and (i, j) not in self.mines:
-                moves[(i, j)] = basic_prob
+                if (i, j) not in self.moves_made and (i, j) not in self.mines:
+                    moves[(i, j)] = basic_prob
 
         # If no moves have been made (nothing in KB) then any is a good option:
         if moves and not self.knowledge:
