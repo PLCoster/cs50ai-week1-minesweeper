@@ -12,6 +12,27 @@ Minesweeper is a puzzle game that consists of a grid of cells, where some of the
 The goal of the game is to flag (i.e., identify) each of the mines. In many implementations of the game, including the one in this project, the player can flag a mine by right-clicking on a cell (or two-finger clicking, depending on the computer).
 
 
+## Knowledge Representation:
+
+The AI's knowledge is represented as the following logical sentence:
+
+{A, B, C, D, E, F, G, H} = 1
+
+where {A, B, C etc.} are a set of cells, and the number 1 is the count of mines among those cells. This representation allows the following inferences to be made, e.g.:
+
+{D, E} = 0
+This implies that none of D, E contain mines, i.e. all are safe cells.
+
+{A, B, C} = 3
+This implies that all cells A, B, C contain a mine.
+
+Furthermore, in general when we have two sentences where sentence A is a subset of sentence B, a new sentence can be infered:
+
+setB - setA = countB - countA
+
+Hence while playing minesweeper and clicking on cells, logical sentences are added to the AI's knowledge base. Often as a new sentence is added to the knowledge base, further inferences can be made allowing the identification of mines or safe spaces.
+
+
 ## Specification:
 
 Complete the implementations of the Sentence class and the MinesweeperAI class in minesweeper.py.
@@ -56,3 +77,8 @@ $pip3 install -r requirements.txt
 Run Game:
 $python3 runner.py
 
+
+## Further Ideas:
+
+* Adding the option to choose the size of minefield grid and number of mines up to some reasonable limits.
+* An option to give the AI knowledge of the number of mines in the grid, which would let it start with a knowledge base of {all grid cells} = number of mines, which would allow additional inferences to be made during play. It would also allow the AI to automatically mark all remaining cells as safe once all mines have been found.
